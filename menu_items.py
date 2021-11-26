@@ -1,6 +1,12 @@
 from abc import ABC, abstractmethod
 
 
+class Menu(ABC):
+    @abstractmethod
+    def create_iterator(self):
+        pass
+
+
 class MenuItem(ABC):
     """
     Abstract class for menu items
@@ -77,7 +83,26 @@ class PancakeHouseIterator(Iterator):
         return self.position < len(self.items)
 
 
-class PancakeHouseMenu:
+class CafeMenuIterator(Iterator):
+    """
+    Iterator for CafeMenu
+    """
+
+    position = 0
+
+    def __init__(self, items):
+        self.items = [items.get(item) for item in items]
+
+    def next(self):
+        menu_item = self.items[self.position]
+        self.position += 1
+        return menu_item
+
+    def has_next(self):
+        return self.position < len(self.items)
+
+
+class PancakeHouseMenu(Menu):
     def __init__(self):
         self.menu_items = []
 
@@ -117,7 +142,7 @@ class PancakeHouseMenu:
         return PancakeHouseIterator(self.menu_items)
 
 
-class DinerMenu:
+class DinerMenu(Menu):
     def __init__(self):
         self.menu_items = []
 
@@ -157,17 +182,55 @@ class DinerMenu:
         return DinerMenuIterator(self.menu_items)
 
 
+class CafeMenu(Menu):
+    menu_items = dict()
+
+    def __init__(self):
+        self.add_item(
+            "Soup of the day",
+            "A cup of the soup of the day, with a side salad",
+            True,
+            3.69,
+        )
+
+        self.add_item(
+            "Burrito",
+            "A large burrito, with whole pinto beans, salsa, guacamole",
+            True,
+            4.29,
+        )
+
+    def add_item(self, name, description, vegetarian, price):
+        self.menu_item = MenuItem(name, description, vegetarian, price)
+        self.menu_items[name] = self.menu_item
+
+    def create_iterator(self):
+        return CafeMenuIterator(self.menu_items)
+
+
+class Waitress:
+    def __init__(self, menus):
+        self.menus = menus
+
+    def print_menu(self):
+        for menu in self.menus:
+            self.print_menu_items(menu.create_iterator())
+
+    def print_menu_items(self, iterator):
+        while iterator.has_next():
+            menu_item = iterator.next()
+            print(
+                "{}, {} -- {}".format(
+                    menu_item.get_name(),
+                    menu_item.get_price(),
+                    menu_item.get_description(),
+                )
+            )
+
+
 pancake_house_menu = PancakeHouseMenu()
-breakfast_items = pancake_house_menu.get_menu_items()
-
 diner_menu = DinerMenu()
-lunch_items = diner_menu.get_menu_items()
+cafe_menu = CafeMenu()
 
-for item in breakfast_items:
-    print(
-        str(item.get_name())
-        + " "
-        + str(item.get_price())
-        + " "
-        + str(item.get_description())
-    )
+waitress = Waitress([pancake_house_menu, diner_menu, cafe_menu])
+waitress.print_menu()
